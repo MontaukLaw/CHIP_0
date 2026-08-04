@@ -1,0 +1,41 @@
+# Keil build output
+MDK-ARM/CHIP_0/
+
+# Keil generated files and per-user settings
+*.uvguix.*
+*.uvoptx
+*.lst
+*.lnp
+*.dep
+*.build_log.htm
+
+# Compiler and linker output
+*.o
+*.obj
+*.d
+*.axf
+*.elf
+*.hex
+*.bin
+*.map
+
+# Debugger output and local settings
+JLinkLog.txt
+JLinkSettings.ini
+*.scvd
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.vs/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary and backup files
+*.bak
+*.tmp
+*.temp
