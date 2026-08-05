@@ -8,6 +8,7 @@
  *
  * Copyright (c) 2026 STMicroelectronics.
  * All rights reserved.
+
  *
  * This software is licensed under terms that can be found in the LICENSE file
  * in the root directory of this software component.
@@ -21,10 +22,11 @@
 #include "dma.h"
 #include "gpio.h"
 #include "usart.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "user_comm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -74,14 +76,6 @@ int main(void) {
      * Configuration--------------------------------------------------------*/
     MPU_Config();
 
-    /* Enable the CPU Cache */
-
-    /* Enable I-Cache---------------------------------------------------------*/
-    SCB_EnableICache();
-
-    /* Enable D-Cache---------------------------------------------------------*/
-    SCB_EnableDCache();
-
     /* MCU
      * Configuration--------------------------------------------------------*/
 
@@ -108,9 +102,12 @@ int main(void) {
     MX_USART3_UART_Init();
     MX_USART1_UART_Init();
     MX_USART6_UART_Init();
+    MX_USB_DEVICE_Init();
     /* USER CODE BEGIN 2 */
     delay_init();
-    
+
+    hc4067_all_init();
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -118,6 +115,10 @@ int main(void) {
     while (1) {
 
         test_led();
+
+        sync_test();
+
+        // cdc_send_test();
 
         /* USER CODE END WHILE */
 
@@ -148,8 +149,10 @@ void SystemClock_Config(void) {
     /** Initializes the RCC Oscillators according to the specified parameters
      * in the RCC_OscInitTypeDef structure.
      */
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+    RCC_OscInitStruct.OscillatorType =
+        RCC_OSCILLATORTYPE_HSI48 | RCC_OSCILLATORTYPE_HSE;
     RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+    RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
     RCC_OscInitStruct.PLL.PLLM = 2;

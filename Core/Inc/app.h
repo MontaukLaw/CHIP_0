@@ -3,4 +3,8 @@
 
 void test_led(void);
 
-#endif /* _APP_H_ */
+void sync_test(void);
+
+void cdc_send_test(void);
+
+#endif /* _APP_H_ */ 
