@@ -8,5 +8,6 @@
 #include "usart.h"
 #include "delay.h"
 #include "hc4067.h"
+#include "comm.h"
 
 #endif /* _USER_COMM_H_ */
