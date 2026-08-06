@@ -10,6 +10,7 @@
       <TargetName>CHIP_0</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
+      <pArmCC>5060422::V5.06 update 4 (build 422)::ARMCC</pArmCC>
       <pCCUsed>5060422::V5.06 update 4 (build 422)::ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
@@ -190,7 +191,7 @@
             <hadIRAM2>1</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
-            <useUlib>0</useUlib>
+            <useUlib>1</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
             <nSecure>0</nSecure>
@@ -314,7 +315,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -413,6 +414,21 @@
               <FileName>comm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\comm.c</FilePath>
+            </File>
+            <File>
+              <FileName>cdc_stdio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\cdc_stdio.c</FilePath>
+            </File>
+            <File>
+              <FileName>mian_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\mian_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>sync.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\sync.c</FilePath>
             </File>
             <File>
               <FileName>main.c</FileName>

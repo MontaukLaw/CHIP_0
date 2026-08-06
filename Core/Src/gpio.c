@@ -63,13 +63,13 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, DAC_OUT_Pin|OUT_EN_1_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, SYNC_4_Pin|SYNC_3_Pin|OUT_S3_Pin|OUT_S2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, SYNC_2_Pin|SYNC_1_Pin|OUT_S1_Pin|OUT_S0_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, OUT_EN_4_Pin|OUT_EN_2_Pin|OUT_EN_3_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, OUT_S3_Pin|OUT_S2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, OUT_S1_Pin|OUT_S0_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : TEST_Pin */
   GPIO_InitStruct.Pin = TEST_Pin;
@@ -92,19 +92,31 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(DAC_OUT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SYNC_4_Pin SYNC_3_Pin OUT_EN_4_Pin OUT_EN_2_Pin
-                           OUT_EN_3_Pin OUT_S3_Pin OUT_S2_Pin */
-  GPIO_InitStruct.Pin = SYNC_4_Pin|SYNC_3_Pin|OUT_EN_4_Pin|OUT_EN_2_Pin
-                          |OUT_EN_3_Pin|OUT_S3_Pin|OUT_S2_Pin;
+  /*Configure GPIO pins : SYNC4_Pin SYNC3_Pin */
+  GPIO_InitStruct.Pin = SYNC4_Pin|SYNC3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SYNC2_Pin SYNC1_Pin */
+  GPIO_InitStruct.Pin = SYNC2_Pin|SYNC1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : OUT_EN_4_Pin OUT_EN_2_Pin OUT_EN_3_Pin OUT_S3_Pin
+                           OUT_S2_Pin */
+  GPIO_InitStruct.Pin = OUT_EN_4_Pin|OUT_EN_2_Pin|OUT_EN_3_Pin|OUT_S3_Pin
+                          |OUT_S2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SYNC_2_Pin SYNC_1_Pin OUT_EN_7_Pin OUT_EN_8_Pin
-                           OUT_EN_5_Pin OUT_EN_6_Pin OUT_S1_Pin OUT_S0_Pin */
-  GPIO_InitStruct.Pin = SYNC_2_Pin|SYNC_1_Pin|OUT_EN_7_Pin|OUT_EN_8_Pin
-                          |OUT_EN_5_Pin|OUT_EN_6_Pin|OUT_S1_Pin|OUT_S0_Pin;
+  /*Configure GPIO pins : OUT_EN_7_Pin OUT_EN_8_Pin OUT_EN_5_Pin OUT_EN_6_Pin
+                           OUT_S1_Pin OUT_S0_Pin */
+  GPIO_InitStruct.Pin = OUT_EN_7_Pin|OUT_EN_8_Pin|OUT_EN_5_Pin|OUT_EN_6_Pin
+                          |OUT_S1_Pin|OUT_S0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;

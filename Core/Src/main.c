@@ -26,6 +26,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+
 #include "user_comm.h"
 /* USER CODE END Includes */
 
@@ -66,7 +68,8 @@ static void MPU_Config(void);
  * @brief  The application entry point.
  * @retval int
  */
-int main(void) {
+int main(void)
+{
 
     /* USER CODE BEGIN 1 */
 
@@ -99,7 +102,7 @@ int main(void) {
     SystemClock_Config();
 
     /* USER CODE BEGIN SysInit */
-
+    HAL_Delay(100U);
     /* USER CODE END SysInit */
 
     /* Initialize all configured peripherals */
@@ -110,29 +113,45 @@ int main(void) {
     MX_USART3_UART_Init();
     MX_USART1_UART_Init();
     MX_USART6_UART_Init();
+
+    /* Keep USB disconnected long enough for the host to notice an MCU reset,
+       especially when firmware is downloaded while the cable stays attached. */
+
     MX_USB_DEVICE_Init();
+
     /* USER CODE BEGIN 2 */
+
     delay_init();
 
-    hc4067_all_init();
+    all_wave_ch_disable();
 
-    if (comm_init() != HAL_OK) {
+    if (comm_init() != HAL_OK)
+    {
         Error_Handler();
     }
 
     HAL_Delay(5000);
 
+    printf("USB CDC printf ready\r\n");
+
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-    while (1) {
+    while (1)
+    {
 
         test_led();
 
-        sync_test();
+        uart1_tx_test();
 
-        comm_process();
+        // uart1_tx_test_without_cdc();
+        // main_task_sync_test();
+
+        // sync_test();
+        // comm_process();
+
+        // main_task();
 
         /* USER CODE END WHILE */
 
@@ -145,7 +164,8 @@ int main(void) {
  * @brief System Clock Configuration
  * @retval None
  */
-void SystemClock_Config(void) {
+void SystemClock_Config(void)
+{
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -157,7 +177,8 @@ void SystemClock_Config(void) {
      */
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
-    while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {
+    while (!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY))
+    {
     }
 
     /** Initializes the RCC Oscillators according to the specified parameters
@@ -177,7 +198,8 @@ void SystemClock_Config(void) {
     RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
     RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
     RCC_OscInitStruct.PLL.PLLFRACN = 0;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+    {
         Error_Handler();
     }
 
@@ -194,7 +216,8 @@ void SystemClock_Config(void) {
     RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
     RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK) {
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+    {
         Error_Handler();
     }
 }
@@ -205,7 +228,8 @@ void SystemClock_Config(void) {
 
 /* MPU Configuration */
 
-void MPU_Config(void) {
+void MPU_Config(void)
+{
     MPU_Region_InitTypeDef MPU_InitStruct = {0};
 
     /* Disables the MPU */
@@ -231,14 +255,11 @@ void MPU_Config(void) {
      */
     MPU_InitStruct.Number = MPU_REGION_NUMBER1;
     MPU_InitStruct.BaseAddress = 0x30000000;
-    MPU_InitStruct.Size = MPU_REGION_SIZE_32KB;
+    MPU_InitStruct.Size = MPU_REGION_SIZE_16KB;
     MPU_InitStruct.SubRegionDisable = 0x0;
-    MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
     MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
-    MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-    MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
-    MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
-    MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+    MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+    MPU_InitStruct.IsBufferable = MPU_ACCESS_BUFFERABLE;
 
     HAL_MPU_ConfigRegion(&MPU_InitStruct);
     /* Enables the MPU */
@@ -249,12 +270,14 @@ void MPU_Config(void) {
  * @brief  This function is executed in case of error occurrence.
  * @retval None
  */
-void Error_Handler(void) {
+void Error_Handler(void)
+{
     /* USER CODE BEGIN Error_Handler_Debug */
     /* User can add his own implementation to report the HAL error return state
      */
     __disable_irq();
-    while (1) {
+    while (1)
+    {
     }
     /* USER CODE END Error_Handler_Debug */
 }
@@ -266,7 +289,8 @@ void Error_Handler(void) {
  * @param  line: assert_param error line source number
  * @retval None
  */
-void assert_failed(uint8_t *file, uint32_t line) {
+void assert_failed(uint8_t *file, uint32_t line)
+{
     /* USER CODE BEGIN 6 */
     /* User can add his own implementation to report the file name and line
        number, ex: printf("Wrong parameters value: file %s on line %d\r\n",

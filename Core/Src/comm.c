@@ -1,5 +1,6 @@
 #include "user_comm.h"
 
+#include "cdc_stdio.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 
@@ -14,7 +15,8 @@
     __attribute__((section(".dma_buffer"), aligned(32)))
 #endif
 
-typedef struct {
+typedef struct
+{
     uint16_t size;
     uint8_t preview[UART1_PREVIEW_SIZE];
 } Uart1RxEvent;
@@ -30,11 +32,13 @@ static const char hex_digits[] = "0123456789ABCDEF";
 
 extern DMA_HandleTypeDef hdma_usart1_rx;
 
-static HAL_StatusTypeDef comm_uart1_start_receive(void) {
+static HAL_StatusTypeDef comm_uart1_start_receive(void)
+{
     HAL_StatusTypeDef status;
 
     if ((huart1.hdmarx != &hdma_usart1_rx) ||
-        (hdma_usart1_rx.Instance != DMA1_Stream6)) {
+        (hdma_usart1_rx.Instance != DMA1_Stream6))
+    {
         return HAL_ERROR;
     }
 
@@ -45,8 +49,10 @@ static HAL_StatusTypeDef comm_uart1_start_receive(void) {
 }
 
 static uint16_t comm_append_text(uint8_t *buffer, uint16_t position,
-                                 const char *text) {
-    while (*text != '\0') {
+                                 const char *text)
+{
+    while (*text != '\0')
+    {
         buffer[position++] = (uint8_t)*text++;
     }
 
@@ -54,29 +60,34 @@ static uint16_t comm_append_text(uint8_t *buffer, uint16_t position,
 }
 
 static uint16_t comm_append_uint16(uint8_t *buffer, uint16_t position,
-                                   uint16_t value) {
+                                   uint16_t value)
+{
     uint8_t digits[5];
     uint8_t count = 0U;
 
-    do {
+    do
+    {
         digits[count++] = (uint8_t)('0' + (value % 10U));
         value /= 10U;
     } while (value != 0U);
 
-    while (count != 0U) {
+    while (count != 0U)
+    {
         buffer[position++] = digits[--count];
     }
 
     return position;
 }
 
-HAL_StatusTypeDef comm_init(void) {
+HAL_StatusTypeDef comm_init(void)
+{
     uart1_event_write = 0U;
     uart1_event_read = 0U;
     uart1_rx_started = 0U;
     uart1_restart_pending = 0U;
 
-    if (hdma_usart1_rx.Instance != DMA1_Stream6) {
+    if (hdma_usart1_rx.Instance != DMA1_Stream6)
+    {
         return HAL_ERROR;
     }
 
@@ -89,39 +100,119 @@ HAL_StatusTypeDef comm_init(void) {
     return HAL_OK;
 }
 
-void comm_process(void) {
+HAL_StatusTypeDef comm_uart1_prepare_rx(void)
+{
+    HAL_StatusTypeDef status;
+
+    if (uart1_restart_pending != 0U)
+    {
+        (void)HAL_UART_AbortReceive(&huart1);
+        uart1_event_read = uart1_event_write;
+        uart1_rx_started = 0U;
+    }
+
+    if (uart1_rx_started != 0U)
+    {
+        return HAL_OK;
+    }
+
+    status = comm_uart1_start_receive();
+    if (status == HAL_OK)
+    {
+        uart1_restart_pending = 0U;
+        uart1_rx_started = 1U;
+    }
+
+    return status;
+}
+
+HAL_StatusTypeDef comm_uart1_wait_2bytes(uint8_t data[2], uint32_t timeout_ms)
+{
+    uint32_t start_tick;
+    uint16_t received = 0U;
+
+    if ((data == NULL) || (uart1_rx_started == 0U))
+    {
+        return HAL_ERROR;
+    }
+
+    start_tick = HAL_GetTick();
+
+    while (received < 2U)
+    {
+        if (uart1_restart_pending != 0U)
+        {
+            return HAL_ERROR;
+        }
+
+        if (uart1_event_read != uart1_event_write)
+        {
+            Uart1RxEvent *event = &uart1_event_queue[uart1_event_read];
+            uint16_t available = (event->size < UART1_PREVIEW_SIZE)
+                                     ? event->size
+                                     : UART1_PREVIEW_SIZE;
+            uint16_t i;
+
+            for (i = 0U; (i < available) && (received < 2U); ++i)
+            {
+                data[received++] = event->preview[i];
+            }
+
+            uart1_event_read =
+                (uint8_t)((uart1_event_read + 1U) % UART1_EVENT_QUEUE_SIZE);
+        }
+
+        cdc_stdio_process();
+
+        if ((timeout_ms != MAX_UART_WAIT_MS) &&
+            ((HAL_GetTick() - start_tick) >= timeout_ms))
+        {
+            /* Discard a late response before the next channel is triggered. */
+            uart1_rx_started = 0U;
+            uart1_restart_pending = 1U;
+            return HAL_TIMEOUT;
+        }
+    }
+
+    return HAL_OK;
+}
+
+void comm_process(void)
+{
     static uint8_t cdc_report[96];
     Uart1RxEvent *event;
     uint16_t preview_size;
     uint16_t position = 0U;
     uint16_t i;
 
-    if (uart1_restart_pending != 0U) {
-        (void)HAL_UART_AbortReceive(&huart1);
+    cdc_stdio_process();
 
-        if (comm_uart1_start_receive() == HAL_OK) {
-            uart1_restart_pending = 0U;
-            uart1_rx_started = 1U;
-        }
+    if (uart1_restart_pending != 0U)
+    {
+        (void)comm_uart1_prepare_rx();
 
         return;
     }
 
     /* Do not let UART traffic interfere with initial USB enumeration. */
-    if (uart1_rx_started == 0U) {
+    if (uart1_rx_started == 0U)
+    {
         if ((hUsbDeviceHS.dev_state == USBD_STATE_CONFIGURED) &&
-            (comm_uart1_start_receive() == HAL_OK)) {
-            uart1_rx_started = 1U;
+            (comm_uart1_prepare_rx() != HAL_OK))
+        {
+            uart1_restart_pending = 1U;
         }
 
         return;
     }
 
-    if (uart1_event_read == uart1_event_write) {
+    if (uart1_event_read == uart1_event_write)
+    {
         return;
     }
 
-    if (hUsbDeviceHS.dev_state != USBD_STATE_CONFIGURED) {
+    if (hUsbDeviceHS.dev_state != USBD_STATE_CONFIGURED)
+    {
         return;
     }
 
@@ -135,7 +226,8 @@ void comm_process(void) {
     position = comm_append_uint16(cdc_report, position, preview_size);
     position = comm_append_text(cdc_report, position, ":");
 
-    for (i = 0U; i < preview_size; ++i) {
+    for (i = 0U; i < preview_size; ++i)
+    {
         uint8_t value = event->preview[i];
 
         cdc_report[position++] = ' ';
@@ -146,50 +238,59 @@ void comm_process(void) {
     cdc_report[position++] = '\r';
     cdc_report[position++] = '\n';
 
-    if (CDC_Transmit_HS(cdc_report, position) == USBD_OK) {
+    if (CDC_Transmit_HS(cdc_report, position) == USBD_OK)
+    {
         uart1_event_read =
             (uint8_t)((uart1_event_read + 1U) % UART1_EVENT_QUEUE_SIZE);
     }
 }
 
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
+{
     HAL_UART_RxEventTypeTypeDef event_type;
     uint8_t next_write;
     uint16_t preview_size;
     uint16_t i;
 
-    if (huart->Instance != USART1) {
+    if (huart->Instance != USART1)
+    {
         return;
     }
 
     event_type = HAL_UARTEx_GetRxEventType(huart);
-    if (event_type == HAL_UART_RXEVENT_HT) {
+    if (event_type == HAL_UART_RXEVENT_HT)
+    {
         return;
     }
 
     next_write = (uint8_t)((uart1_event_write + 1U) % UART1_EVENT_QUEUE_SIZE);
 
-    if (next_write != uart1_event_read) {
+    if (next_write != uart1_event_read)
+    {
         Uart1RxEvent *event = &uart1_event_queue[uart1_event_write];
 
         event->size = size;
         preview_size = (size < UART1_PREVIEW_SIZE) ? size : UART1_PREVIEW_SIZE;
 
-        for (i = 0U; i < preview_size; ++i) {
+        for (i = 0U; i < preview_size; ++i)
+        {
             event->preview[i] = uart1_rx_buffer[i];
         }
 
         uart1_event_write = next_write;
     }
 
-    if (comm_uart1_start_receive() != HAL_OK) {
+    if (comm_uart1_start_receive() != HAL_OK)
+    {
         uart1_rx_started = 0U;
         uart1_restart_pending = 1U;
     }
 }
 
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == USART1) {
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART1)
+    {
         uart1_rx_started = 0U;
         uart1_restart_pending = 1U;
     }
