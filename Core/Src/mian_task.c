@@ -31,7 +31,8 @@ static uint8_t uart1_test_cdc_in_flight;
 static uint8_t uart1_test_crc_led_active;
 static uint32_t uart1_test_crc_led_start_tick;
 
-volatile uint16_t sync_counter = 0U;
+volatile uint16_t sync_1_counter = 0U;
+volatile uint8_t get_sync_1 = 0U;
 
 static uint32_t uart1_test_crc32(const uint8_t *data, uint16_t length)
 {
@@ -222,14 +223,36 @@ void uart1_tx_test(void)
         return;
     }
 
+    sync_1_counter = 0;
+    get_sync_1 = 0;
+
     (void)HAL_UART_Transmit(&huart1, test_data, 1, 0xFFFF);
-    sync_counter = 0;
+
+#if 1
+    uint8_t adc_idx = 0;
+    uint8_t wave_idx = 0;
+
+    // 一共4096次循环, 每次循环发送一个同步信号, 打开一个波形通道, 等待5us, 关闭波形通道, 关闭同步信号.
+    for (adc_idx = 0; adc_idx < ADC_CH_PER_CHIP; adc_idx++)
+    {
+        for (wave_idx = 0; wave_idx < WAVE_CH_NMB; wave_idx++)
+        {
+            while (get_sync_1 == 0)
+                ;
+            HAL_GPIO_TogglePin(TEST_GPIO_Port, TEST_Pin);
+            wave_ch_on(wave_idx);
+            delay_us(5); // 等待5us
+            all_wave_ch_disable();
+            get_sync_1 = 0;
+        }
+    }
+#endif
 
     uart1_rx_test_without_crc();
     // uart1_rx_test();
 
     // HAL_Delay(100);
-    HAL_GPIO_TogglePin(TEST_GPIO_Port, TEST_Pin);
+    
 }
 
 void uart1_tx_test_without_cdc(void)
@@ -348,4 +371,11 @@ void main_task(void)
     }
 }
 
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if (GPIO_Pin == SYNC1_Pin)
+    {
+        sync_1_counter++;
+        get_sync_1 = 1;
+    }
+}

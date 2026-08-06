@@ -24,6 +24,7 @@
 #include "usart.h"
 #include "usb_device.h"
 
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
@@ -75,8 +76,7 @@ int main(void)
 
     /* USER CODE END 1 */
 
-    /* MPU
-     * Configuration--------------------------------------------------------*/
+    /* MPU Configuration--------------------------------------------------------*/
     MPU_Config();
 
     /* Enable the CPU Cache */
@@ -87,11 +87,9 @@ int main(void)
     /* Enable D-Cache---------------------------------------------------------*/
     SCB_EnableDCache();
 
-    /* MCU
-     * Configuration--------------------------------------------------------*/
+    /* MCU Configuration--------------------------------------------------------*/
 
-    /* Reset of all peripherals, Initializes the Flash interface and the
-     * Systick. */
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     HAL_Init();
 
     /* USER CODE BEGIN Init */
@@ -102,7 +100,7 @@ int main(void)
     SystemClock_Config();
 
     /* USER CODE BEGIN SysInit */
-    HAL_Delay(100U);
+    HAL_Delay(200U);
     /* USER CODE END SysInit */
 
     /* Initialize all configured peripherals */
@@ -113,12 +111,7 @@ int main(void)
     MX_USART3_UART_Init();
     MX_USART1_UART_Init();
     MX_USART6_UART_Init();
-
-    /* Keep USB disconnected long enough for the host to notice an MCU reset,
-       especially when firmware is downloaded while the cable stays attached. */
-
     MX_USB_DEVICE_Init();
-
     /* USER CODE BEGIN 2 */
 
     delay_init();
@@ -146,7 +139,7 @@ int main(void)
         uart1_tx_test();
 
         // uart1_tx_test_without_cdc();
-        // main_task_sync_test();
+         // main_task_sync_test();
 
         // sync_test();
         // comm_process();
@@ -184,8 +177,7 @@ void SystemClock_Config(void)
     /** Initializes the RCC Oscillators according to the specified parameters
      * in the RCC_OscInitTypeDef structure.
      */
-    RCC_OscInitStruct.OscillatorType =
-        RCC_OSCILLATORTYPE_HSI48 | RCC_OSCILLATORTYPE_HSE;
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48 | RCC_OSCILLATORTYPE_HSE;
     RCC_OscInitStruct.HSEState = RCC_HSE_ON;
     RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -205,9 +197,7 @@ void SystemClock_Config(void)
 
     /** Initializes the CPU, AHB and APB buses clocks
      */
-    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
-                                  RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2 |
-                                  RCC_CLOCKTYPE_D3PCLK1 | RCC_CLOCKTYPE_D1PCLK1;
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_D3PCLK1 | RCC_CLOCKTYPE_D1PCLK1;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;

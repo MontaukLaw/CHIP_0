@@ -40,15 +40,17 @@ class SerialReaderThread(QThread):
         self._stop_event.set()
 
     def run(self) -> None:
+        error_message: str | None = None
         try:
             port_name = self._requested_port or self._find_port()
-            self.connection_changed.emit(True, port_name)
             self._read_serial(port_name)
         except (RuntimeError, serial.SerialException, OSError) as error:
             if not self._stop_event.is_set():
-                self.reader_error.emit(str(error))
+                error_message = str(error)
         finally:
             self.connection_changed.emit(False, "")
+            if error_message is not None:
+                self.reader_error.emit(error_message)
 
     def _read_serial(self, port_name: str) -> None:
         parser = FrameParser()
@@ -61,6 +63,7 @@ class SerialReaderThread(QThread):
             BAUDRATE,
             timeout=SERIAL_TIMEOUT_SECONDS,
         ) as cdc:
+            self.connection_changed.emit(True, port_name)
             cdc.reset_input_buffer()
 
             while not self._stop_event.is_set():

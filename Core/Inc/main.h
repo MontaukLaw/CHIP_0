@@ -69,12 +69,16 @@ void Error_Handler(void);
 #define DAC_OUT_GPIO_Port GPIOA
 #define SYNC4_Pin GPIO_PIN_10
 #define SYNC4_GPIO_Port GPIOE
+#define SYNC4_EXTI_IRQn EXTI15_10_IRQn
 #define SYNC3_Pin GPIO_PIN_14
 #define SYNC3_GPIO_Port GPIOE
+#define SYNC3_EXTI_IRQn EXTI15_10_IRQn
 #define SYNC2_Pin GPIO_PIN_15
 #define SYNC2_GPIO_Port GPIOD
+#define SYNC2_EXTI_IRQn EXTI15_10_IRQn
 #define SYNC1_Pin GPIO_PIN_11
 #define SYNC1_GPIO_Port GPIOD
+#define SYNC1_EXTI_IRQn EXTI15_10_IRQn
 #define OUT_EN_4_Pin GPIO_PIN_15
 #define OUT_EN_4_GPIO_Port GPIOE
 #define OUT_EN_7_Pin GPIO_PIN_14
